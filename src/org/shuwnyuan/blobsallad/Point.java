@@ -1,4 +1,4 @@
-package com.shuwnyuan.android;
+package org.shuwnyuan.blobsallad;
 
 public class Point {
     private final double x;

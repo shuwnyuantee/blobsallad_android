@@ -1,6 +1,7 @@
-package com.shuwnyuan.android;
+package org.shuwnyuan.blobsallad;
 
-import com.shuwnyuan.android.BlobSalladView;
+import org.shuwnyuan.blobsallad.BlobSalladView;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
@@ -25,6 +26,7 @@ public class BlobSallad extends Activity {
         setContentView(R.layout.main);
         
         blobSalladView = (BlobSalladView) findViewById(R.id.blob_sallad);
+        blobSalladView.setVisibility(View.INVISIBLE);
         
         statusText = (TextView) findViewById(R.id.text);
         backImage = (ImageView) findViewById(R.id.back_image);

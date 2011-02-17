@@ -1,4 +1,4 @@
-package com.shuwnyuan.android;
+package org.shuwnyuan.blobsallad;
 
 //import java.awt.Graphics;
 import java.util.ArrayList;
