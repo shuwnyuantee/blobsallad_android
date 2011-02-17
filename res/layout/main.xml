@@ -8,7 +8,7 @@
 	 	android:id="@+id/blob_sallad"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="#FFFFFFFF" />
+		android:background="@drawable/bird" />
     
 	<RelativeLayout
 		android:layout_width="match_parent"

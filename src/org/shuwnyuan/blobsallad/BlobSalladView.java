@@ -67,7 +67,7 @@ public class BlobSalladView extends View {
 		}
 		
 		timer = new Timer();
-		timer.schedule(new UpdateTask(), 0, 10);	//30);
+		timer.schedule(new UpdateTask(), 0, 30);
 	}
 	
 	public class UpdateTask extends TimerTask {
