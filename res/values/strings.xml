@@ -3,4 +3,6 @@
     <string name="intro">I am BlobSallad!</string>
     <string name="app_name">BlobSallad</string>
     <string name="start">Start</string>
+    <string name="quit">Quit</string>
+    <string name="new_game">New Game</string>
 </resources>
