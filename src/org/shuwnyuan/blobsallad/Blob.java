@@ -76,12 +76,12 @@ public class Blob {
 
     public void addBlob(Blob blob)
     {
-      int index = this.joints.size();
-      double dist;
-
-      this.joints.add(index, new Joint(this.middlePointMass, blob.getMiddlePointMass(), 0.0, 0.0));
-      dist = this.radius + blob.getRadius();
-      this.joints.get(index).setDist(dist * 0.95, 0.0);
+		int index = this.joints.size();
+		double dist;
+		
+		this.joints.add(index, new Joint(this.middlePointMass, blob.getMiddlePointMass(), 0.0, 0.0));
+		dist = this.radius + blob.getRadius();
+		this.joints.get(index).setDist(dist * 0.95, 0.0);
     }
 
     public double getXPos()

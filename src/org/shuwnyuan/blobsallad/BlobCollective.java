@@ -49,8 +49,7 @@ public class BlobCollective {
         }
 
         motherBlob.scale(0.75);
-        newBlob = new Blob(motherBlob.getXPos(),
-        motherBlob.getYPos(), motherBlob.getRadius(), 8);
+        newBlob = new Blob(motherBlob.getXPos(), motherBlob.getYPos(), motherBlob.getRadius(), 8);
 
         for (i = 0; i < this.blobs.size(); i++)
         {
@@ -66,6 +65,49 @@ public class BlobCollective {
         this.numActive++;
     }
 
+    public void selectedBlobSplit()
+    {
+        int i = 0;
+        int emptySlot;
+        Blob motherBlob = null, newBlob;
+        
+        if(this.selectedBlob == null)
+        {
+            return;
+        }
+        
+        if (this.numActive == this.maxNum)
+        {
+            return;
+        }
+
+        emptySlot = this.blobs.size();
+        for (i = 0; i < this.blobs.size(); i++)
+        {
+            if (this.blobs.get(i) == null)
+            {
+                emptySlot = i;
+            }
+        }
+
+        motherBlob = this.selectedBlob;
+        motherBlob.scale(0.75);
+        newBlob = new Blob(motherBlob.getXPos(), motherBlob.getYPos(), motherBlob.getRadius(), 8);
+
+        for (i = 0; i < this.blobs.size(); i++)
+        {
+            if(this.blobs.get(i) == null)
+            {
+                continue;
+            }
+            this.blobs.get(i).addBlob(newBlob);
+            newBlob.addBlob(this.blobs.get(i));
+        }
+        this.blobs.add(emptySlot, newBlob);
+
+        this.numActive++;
+    }
+    
     public int findSmallest(int exclude)
     {
         double minRadius = 1000.0;

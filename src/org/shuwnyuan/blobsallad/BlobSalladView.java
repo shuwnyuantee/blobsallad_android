@@ -6,12 +6,16 @@ import java.util.TimerTask;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.GestureDetector.OnDoubleTapListener;
+import android.view.GestureDetector.OnGestureListener;
 
 
-public class BlobSalladView extends View {
+
+public class BlobSalladView extends View implements OnGestureListener, OnDoubleTapListener{
 
 	private int mMode = NOT_READY;
 	public static final int NOT_READY = 0;
@@ -25,6 +29,7 @@ public class BlobSalladView extends View {
     private Point savedMouseCoords = null;
     private Point selectOffset = null;
     private Timer timer;
+    private GestureDetector gestureDetector;
     
     
 	public BlobSalladView(Context context) {
@@ -42,7 +47,8 @@ public class BlobSalladView extends View {
 		setFocusable(true);
 		setFocusableInTouchMode(true);
 		requestFocus();
-//		setClickable(true);
+		
+		gestureDetector = new GestureDetector(getContext(), this);
 	}
 	
 	@Override
@@ -181,65 +187,18 @@ public class BlobSalladView extends View {
     	return super.onKeyDown(keyCode, event);
     }
 
-
+    
+    // onDoubleTap 		- split blob
+    // onFling 			- move blob
+    // onLongPress 		- join blob
+    // toggle gravity ??
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-    	final int action = event.getAction();
-        switch (action) {
-	        case MotionEvent.ACTION_DOWN: {
-	        	Point mouseCoords;
-
-                if(stopped == true)
-                {
-                    return true;
-                }
-                mouseCoords = getMouseCoords(event);
-                if(mouseCoords == null)
-                {
-                    return true;
-                }
-	        	
-                selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
-	            break;
-	        }
-	            
-	        case MotionEvent.ACTION_MOVE: {
-	            Point mouseCoords;
-
-                if (stopped == true)
-                {
-                    return true;
-                }
-                if (selectOffset == null)
-                {
-                    return true;
-                }
-
-                mouseCoords = getMouseCoords(event);
-
-                if(mouseCoords == null)
-                {
-                    return true;
-                }
-
-                blobColl.selectedBlobMoveTo(mouseCoords.getX() - selectOffset.getX(), mouseCoords.getY() - selectOffset.getY());
-                savedMouseCoords = mouseCoords;
-                
-	            // Invalidate to request a redraw
-//                invalidate();
-
-	            break;
-	        }
-	        
-	        case MotionEvent.ACTION_UP: {
-	        	blobColl.unselectBlob();
-                savedMouseCoords = null;
-                selectOffset = null;
-	        	break;
-	        }
+        if (gestureDetector.onTouchEvent(event)) {
+            return true;
         }
-        return true;
+        return false;
     }
     
     public Point getMouseCoords(MotionEvent event)
@@ -247,4 +206,104 @@ public class BlobSalladView extends View {
     	return new Point(event.getX()/scaleFactor, event.getY()/scaleFactor);
     }
 
+    // method for OnGestureListener
+	@Override
+	public boolean onDown(MotionEvent event)
+	{
+		return true;
+	}
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
+	{
+		// select blob
+		Point mouseCoords;
+        if(stopped == true)
+        {
+            return true;
+        }
+        mouseCoords = getMouseCoords(e1);
+        if(mouseCoords == null)
+        {
+            return true;
+        }
+        selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
+			
+		// move blob
+        if (selectOffset == null)
+        {
+            return true;
+        }
+        mouseCoords = getMouseCoords(e2);
+        if(mouseCoords == null)
+        {
+            return true;
+        }
+        blobColl.selectedBlobMoveTo(mouseCoords.getX() - selectOffset.getX(), mouseCoords.getY() - selectOffset.getY());
+        savedMouseCoords = mouseCoords;
+        // Invalidate to request a redraw
+        // invalidate();
+
+        // unselect blob
+        blobColl.unselectBlob();
+        savedMouseCoords = null;
+        selectOffset = null;
+			
+  		return true;
+	}
+
+	@Override
+	public void onLongPress(MotionEvent event)
+	{
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
+	{
+		return false;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent event)
+	{
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent event)
+	{
+		return false;
+	}
+
+	// method for OnDoubleTapListener
+	@Override
+	public boolean onDoubleTap(MotionEvent event)
+	{
+		Point mouseCoords;
+		mouseCoords = getMouseCoords(event);
+		if(mouseCoords == null)
+		{
+		    return true;
+		}
+
+		selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
+		blobColl.selectedBlobSplit();
+		
+		blobColl.unselectBlob();
+        selectOffset = null;
+		
+		return true;
+	}
+
+	@Override
+	public boolean onDoubleTapEvent(MotionEvent arg0)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean onSingleTapConfirmed(MotionEvent arg0)
+	{
+		return false;
+	}
+    
 }
