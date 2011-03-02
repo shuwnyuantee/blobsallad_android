@@ -241,8 +241,6 @@ public class BlobSalladView extends View implements OnGestureListener, OnDoubleT
         }
         blobColl.selectedBlobMoveTo(mouseCoords.getX() - selectOffset.getX(), mouseCoords.getY() - selectOffset.getY());
         savedMouseCoords = mouseCoords;
-        // Invalidate to request a redraw
-        // invalidate();
 
         // unselect blob
         blobColl.unselectBlob();
@@ -255,6 +253,18 @@ public class BlobSalladView extends View implements OnGestureListener, OnDoubleT
 	@Override
 	public void onLongPress(MotionEvent event)
 	{
+		Point mouseCoords;
+		mouseCoords = getMouseCoords(event);
+		if(mouseCoords == null)
+		{
+		    return;
+		}
+
+		selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
+		blobColl.selectedBlobJoin();
+		
+		blobColl.unselectBlob();
+        selectOffset = null;
 	}
 
 	@Override

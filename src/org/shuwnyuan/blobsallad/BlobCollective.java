@@ -108,6 +108,52 @@ public class BlobCollective {
         this.numActive++;
     }
     
+    public void selectedBlobJoin()
+    {
+    	int blob1Index = -1, blob2Index;
+        double r1, r2, r3;
+
+        if (this.selectedBlob == null)
+        {
+            return;
+        }
+        
+        if (this.numActive == 1)
+        {
+        	return;
+        }
+
+        for (int i = 0; i < this.blobs.size(); i++)
+        {
+            if (this.blobs.get(i) == null)
+            {
+                continue;
+            }
+
+            if (this.blobs.get(i).getSelected() == true)
+            {
+            	blob1Index = i;
+            	break;
+            }
+        }
+        
+        if (blob1Index < 0)
+        {
+        	return;
+        }
+        
+        blob2Index = this.findClosest(blob1Index);
+
+        r1 = this.blobs.get(blob1Index).getRadius();
+        r2 = this.blobs.get(blob2Index).getRadius();
+        r3 = Math.sqrt(r1 * r1 + r2 * r2);
+
+        this.blobs.set(blob1Index, null);
+        this.blobs.get(blob2Index).scale(0.945 * r3 / r2);
+
+        this.numActive--;
+    }
+    
     public int findSmallest(int exclude)
     {
         double minRadius = 1000.0;
@@ -163,9 +209,9 @@ public class BlobCollective {
         int blob1Index, blob2Index;
         double r1, r2, r3;
 
-        if(this.numActive == 1)
+        if (this.numActive == 1)
         {
-        return;
+        	return;
         }
 
         blob1Index = this.findSmallest(-1);

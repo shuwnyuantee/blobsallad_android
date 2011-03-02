@@ -200,6 +200,11 @@ public class Blob {
         this.selected = selected;
     }
 
+    public boolean getSelected()
+    {
+        return this.selected; 
+    }
+    
     public void drawEars(Canvas canvas, double scaleFactor)
     {
         //ctx.strokeStyle = "#000000";
