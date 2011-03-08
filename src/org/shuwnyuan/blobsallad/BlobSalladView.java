@@ -1,10 +1,12 @@
 package org.shuwnyuan.blobsallad;
 
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.media.MediaPlayer;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -12,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.OnGestureListener;
+
 
 
 
@@ -30,7 +33,8 @@ public class BlobSalladView extends View implements OnGestureListener, OnDoubleT
     private Point selectOffset = null;
     private Timer timer;
     private GestureDetector gestureDetector;
-    
+    private MediaPlayer splitSound, joinSound;
+
     
 	public BlobSalladView(Context context) {
 		super(context);
@@ -49,6 +53,16 @@ public class BlobSalladView extends View implements OnGestureListener, OnDoubleT
 		requestFocus();
 		
 		gestureDetector = new GestureDetector(getContext(), this);
+	}
+	
+	public void setSplitSound(MediaPlayer splitSound)
+	{
+		this.splitSound = splitSound;
+	}
+	
+	public void setJoinSound(MediaPlayer joinSound)
+	{
+		this.joinSound = joinSound;
 	}
 	
 	@Override
@@ -223,19 +237,19 @@ public class BlobSalladView extends View implements OnGestureListener, OnDoubleT
             return true;
         }
         mouseCoords = getMouseCoords(e1);
-        if(mouseCoords == null)
+        if (mouseCoords == null)
         {
             return true;
         }
         selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
-			
-		// move blob
         if (selectOffset == null)
         {
             return true;
         }
+			
+		// move blob
         mouseCoords = getMouseCoords(e2);
-        if(mouseCoords == null)
+        if (mouseCoords == null)
         {
             return true;
         }
@@ -246,7 +260,7 @@ public class BlobSalladView extends View implements OnGestureListener, OnDoubleT
         blobColl.unselectBlob();
         savedMouseCoords = null;
         selectOffset = null;
-			
+
   		return true;
 	}
 
@@ -261,10 +275,17 @@ public class BlobSalladView extends View implements OnGestureListener, OnDoubleT
 		}
 
 		selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
-		blobColl.selectedBlobJoin();
+		if (selectOffset == null)
+        {
+            return;
+        }
 		
+		blobColl.selectedBlobJoin();
 		blobColl.unselectBlob();
         selectOffset = null;
+        
+        // play sound effect
+        joinSound.start();
 	}
 
 	@Override
@@ -296,11 +317,18 @@ public class BlobSalladView extends View implements OnGestureListener, OnDoubleT
 		}
 
 		selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
-		blobColl.selectedBlobSplit();
+		if (selectOffset == null)
+        {
+            return true;
+        }
 		
+		blobColl.selectedBlobSplit();
 		blobColl.unselectBlob();
         selectOffset = null;
-		
+        
+        // play sound effect
+        splitSound.start();
+        
 		return true;
 	}
 

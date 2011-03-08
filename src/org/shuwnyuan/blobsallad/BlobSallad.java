@@ -3,6 +3,7 @@ package org.shuwnyuan.blobsallad;
 import org.shuwnyuan.blobsallad.BlobSalladView;
 
 import android.app.Activity;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,6 +21,7 @@ public class BlobSallad extends Activity {
     Button startButton;
     ImageView backImage;
     TextView statusText;
+    MediaPlayer splitSound, joinSound;
 	
     public static final String LOG_TAG = "yuan_debug";
     
@@ -35,6 +37,11 @@ public class BlobSallad extends Activity {
         statusText = (TextView) findViewById(R.id.text);
         backImage = (ImageView) findViewById(R.id.back_image);
         startButton = (Button) findViewById(R.id.start_button);
+        
+        splitSound = MediaPlayer.create(this, R.raw.click2);
+        joinSound = MediaPlayer.create(this, R.raw.pling);
+        blobSalladView.setSplitSound(splitSound);
+        blobSalladView.setJoinSound(joinSound);
         
         startButton.setOnClickListener(new View.OnClickListener(){
         	@Override
