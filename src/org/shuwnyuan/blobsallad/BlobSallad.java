@@ -38,8 +38,8 @@ public class BlobSallad extends Activity {
         backImage = (ImageView) findViewById(R.id.back_image);
         startButton = (Button) findViewById(R.id.start_button);
         
-        splitSound = MediaPlayer.create(this, R.raw.click2);
-        joinSound = MediaPlayer.create(this, R.raw.pling);
+        splitSound = MediaPlayer.create(this, R.raw.receive);
+        joinSound = MediaPlayer.create(this, R.raw.online);
         blobSalladView.setSplitSound(splitSound);
         blobSalladView.setJoinSound(joinSound);
         
