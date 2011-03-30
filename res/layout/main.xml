@@ -10,33 +10,4 @@
 		android:layout_height="match_parent"
 		android:background="@drawable/bird" />
     
-	<RelativeLayout
-		android:layout_width="match_parent"
-		android:layout_height="match_parent" >
-
-		<ImageView
-	    	android:id="@+id/back_image"
-	    	style="@style/BackgroundImage" />
-
-		<TextView
-		 android:id="@+id/text"
-			android:text="@string/intro"
-			android:visibility="visible"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_centerInParent="true"
-			android:textColor="#ffaa22aa"
-			android:textSize="24sp"/>
-			
-		<Button
-	    	android:id="@+id/start_button"
-	    	android:layout_alignParentBottom="true"
-	    	android:layout_centerHorizontal="true"
-	    	android:layout_width="100px"
-	    	android:layout_height="wrap_content"
-	    	android:text="@string/start" />
-			
-	</RelativeLayout>
-    
-
 </FrameLayout>

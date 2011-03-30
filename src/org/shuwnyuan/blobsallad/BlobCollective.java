@@ -3,6 +3,7 @@ package org.shuwnyuan.blobsallad;
 //import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import android.graphics.Canvas;
 
@@ -19,7 +20,8 @@ public class BlobCollective {
         this.numActive = 1;
         this.tmpForce = new Vector(0.0, 0.0);
         this.selectedBlob = null;
-        blobs.add(0, new Blob(x, y, 0.4, 8));
+//        blobs.add(0, new Blob(x, y, 0.4, 8));
+        blobs.add(0, new Blob(x, y, 0.6, 8));
     }
 
     public void split()
@@ -108,19 +110,19 @@ public class BlobCollective {
         this.numActive++;
     }
     
-    public void selectedBlobJoin()
+    public boolean selectedBlobJoin()
     {
     	int blob1Index = -1, blob2Index;
         double r1, r2, r3;
 
         if (this.selectedBlob == null)
         {
-            return;
+            return false;
         }
         
         if (this.numActive == 1)
         {
-        	return;
+        	return false;
         }
 
         for (int i = 0; i < this.blobs.size(); i++)
@@ -139,7 +141,7 @@ public class BlobCollective {
         
         if (blob1Index < 0)
         {
-        	return;
+        	return false;
         }
         
         blob2Index = this.findClosest(blob1Index);
@@ -150,8 +152,9 @@ public class BlobCollective {
 
         this.blobs.set(blob1Index, null);
         this.blobs.get(blob2Index).scale(0.945 * r3 / r2);
-
         this.numActive--;
+        
+        return true;
     }
     
     public int findSmallest(int exclude)
@@ -269,6 +272,7 @@ public class BlobCollective {
         return selectOffset;
     }
 
+        
     public void unselectBlob()
     {
         if (this.selectedBlob == null)
@@ -279,6 +283,40 @@ public class BlobCollective {
         this.selectedBlob = null;
     }
 
+    public Point selectNearestBlob(double x, double y)
+    {
+        int i;
+        double minDist = 10000.0;
+        PointMass otherPointMass;
+        Point selectOffset = null;
+
+        for (i = 0; i < this.blobs.size(); i++)
+        {
+            if(this.blobs.get(i) == null)
+            {
+                continue;
+            }
+
+            otherPointMass = this.blobs.get(i).getMiddlePointMass();
+            double aXbX = x - otherPointMass.getXPos();
+            double aYbY = y - otherPointMass.getYPos();
+            double dist = aXbX * aXbX + aYbY * aYbY;
+            if (dist < minDist)
+            {
+                minDist = dist;
+                // select as nearest blob
+                this.selectedBlob = this.blobs.get(i);
+                selectOffset = new Point(aXbX, aYbY);
+            }
+        }
+
+        if (this.selectedBlob != null)
+        {
+            this.selectedBlob.setSelected(true);
+        }
+        return selectOffset;
+    }
+    
     public void selectedBlobMoveTo(double x, double y)
     {
         if(this.selectedBlob == null)
@@ -331,6 +369,34 @@ public class BlobCollective {
                 this.blobs.get(i).setForce(new Vector(0.0, 0.0));
                 continue;
             }
+            this.blobs.get(i).setForce(force);
+        }
+    }
+    
+    public void setRandomForce()
+    {
+        int i;
+        for (i = 0; i < this.blobs.size(); i++)
+        {
+            if (this.blobs.get(i) == null)
+            {
+                continue;
+            }
+            if (this.blobs.get(i) == this.selectedBlob)
+            {
+                this.blobs.get(i).setForce(new Vector(0.0, 0.0));
+                continue;
+            }
+            
+            // generate random force for each blob
+            Random random = new Random();
+	    	int maxvalue = 10;
+	    	int x = random.nextInt(maxvalue);
+	    	int y = random.nextInt(maxvalue);
+	    	
+	    	Vector force = new Vector(0, 0);
+	    	force.setX(x);
+	    	force.setY(y);
             this.blobs.get(i).setForce(force);
         }
     }
