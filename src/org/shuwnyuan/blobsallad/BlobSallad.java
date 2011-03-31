@@ -377,7 +377,36 @@ public class BlobSallad extends WallpaperService {
     	@Override
     	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
     	{
-    		return false;
+    		// select blob
+    		Point mouseCoords;
+            mouseCoords = getMouseCoords(e1);
+            if (mouseCoords == null)
+            {
+                return true;
+            }
+            selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
+            if (selectOffset == null)
+            {
+                return true;
+            }
+    			
+    		// move blob
+            mouseCoords = getMouseCoords(e2);
+            if (mouseCoords == null)
+            {
+                return true;
+            }
+            blobColl.selectedBlobMoveTo(mouseCoords.getX() - selectOffset.getX(), mouseCoords.getY() - selectOffset.getY());
+            savedMouseCoords = mouseCoords;
+
+            // unselect blob
+            blobColl.unselectBlob();
+            savedMouseCoords = null;
+            selectOffset = null;
+
+            // draw here to avoid lag
+            doNextFrame();
+      		return true;
     	}
 
     	@Override
