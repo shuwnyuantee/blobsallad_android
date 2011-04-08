@@ -14,14 +14,14 @@ public class BlobCollective {
     private List<Blob> blobs = new ArrayList<Blob>();
     private Vector tmpForce;
     private Blob selectedBlob;
+    private final double mScaleFactor = 0.90;
 
     public BlobCollective(double x, double y, int maxNum) {
         this.maxNum = maxNum;
         this.numActive = 1;
         this.tmpForce = new Vector(0.0, 0.0);
         this.selectedBlob = null;
-//        blobs.add(0, new Blob(x, y, 0.4, 8));
-        blobs.add(0, new Blob(x, y, 0.6, 8));
+        blobs.add(0, new Blob(x, y, 0.4, 8));
     }
 
     public void split()
@@ -50,7 +50,7 @@ public class BlobCollective {
             }
         }
 
-        motherBlob.scale(0.75);
+        motherBlob.scale(mScaleFactor);
         newBlob = new Blob(motherBlob.getXPos(), motherBlob.getYPos(), motherBlob.getRadius(), 8);
 
         for (i = 0; i < this.blobs.size(); i++)
@@ -93,7 +93,7 @@ public class BlobCollective {
         }
 
         motherBlob = this.selectedBlob;
-        motherBlob.scale(0.75);
+        motherBlob.scale(mScaleFactor);
         newBlob = new Blob(motherBlob.getXPos(), motherBlob.getYPos(), motherBlob.getRadius(), 8);
 
         for (i = 0; i < this.blobs.size(); i++)
@@ -112,7 +112,7 @@ public class BlobCollective {
     
     public boolean selectedBlobJoin()
     {
-    	int blob1Index = -1, blob2Index;
+    	int blob1Index = -1, blob2Index = -1;
         double r1, r2, r3;
 
         if (this.selectedBlob == null)
@@ -150,8 +150,14 @@ public class BlobCollective {
         r2 = this.blobs.get(blob2Index).getRadius();
         r3 = Math.sqrt(r1 * r1 + r2 * r2);
 
+        double bigger_r = r2;
+        if (r2 < r1)
+        {
+        	bigger_r = r1;
+        }
+        
         this.blobs.set(blob1Index, null);
-        this.blobs.get(blob2Index).scale(0.945 * r3 / r2);
+        this.blobs.get(blob2Index).scale(0.75 * r3 / r2);
         this.numActive--;
         
         return true;

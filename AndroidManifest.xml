@@ -6,6 +6,7 @@
 
     <uses-sdk android:minSdkVersion="7" />
     <uses-feature android:name="android.software.live_wallpaper" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application android:icon="@drawable/icon"
         android:label="@string/app_name"

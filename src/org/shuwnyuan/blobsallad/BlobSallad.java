@@ -2,20 +2,23 @@ package org.shuwnyuan.blobsallad;
 
 import java.util.Random;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.GestureDetector;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.OnGestureListener;
-import android.view.View.OnKeyListener;
 import android.util.Log;
 import android.service.wallpaper.WallpaperService;
 
@@ -24,7 +27,7 @@ public class BlobSallad extends WallpaperService {
 	
 	private final Handler mHandler = new Handler();
 	// time between frames (msec)
-	private static final int FRAME_INTERVAL = 20;
+	private static final int FRAME_INTERVAL = 30;
 	
 	
 	@Override
@@ -36,7 +39,7 @@ public class BlobSallad extends WallpaperService {
     public void onCreate() {
         super.onCreate();
         /* now let's wait until the debugger attaches */
-        android.os.Debug.waitForDebugger();
+//        android.os.Debug.waitForDebugger();
     }
  
     @Override
@@ -61,24 +64,40 @@ public class BlobSallad extends WallpaperService {
 		private Bitmap mBitmap = null;
 		private Bitmap mBgBitmap = null;
 		private final Paint	mPaint = new Paint();
-		private static final int DEFAULT_ALPHA = 70;
 		
 	    private Environment env = new Environment(0.2, 0.2, 2.6, 1.6);
 	    private final double scaleFactor = 150.0;
-	    private BlobCollective blobColl = new BlobCollective(1.0, 1.0, 200);
-//	    private Vector gravity = new Vector(0.0, 10.0);
-	    //set default to no gravity
-	    private Vector gravity = new Vector(2.0, 5.0);
+	    private BlobCollective blobColl = new BlobCollective(1.0, 1.0, 30);
+	    private Vector gravity = new Vector(0.0, 10.0);
 	    private Point savedMouseCoords = null;
 	    private Point selectOffset = null;
 	    private GestureDetector gestureDetector;
-	    private int counter = 0;
-	    private boolean isFirstTime = true;
+	    
+	    private SensorManager mSensorManager;
+	    private float mAccel; 			// acceleration apart from gravity
+	    private float mAccelCurrent; 	// current acceleration including gravity
+	    private float mAccelLast; 		// last acceleration including gravity
 	    
 
     	private final Runnable mDoNextFrame = new Runnable() {
     		public void run() {
     			doNextFrame();
+    		}
+    	};
+    	
+    	private final SensorEventListener mSensorListener = new SensorEventListener()
+    	{
+    		public void onSensorChanged(SensorEvent se) {
+    			float x = se.values[0];
+    			float y = se.values[1];
+    			float z = se.values[2];
+    			mAccelLast = mAccelCurrent;
+    			mAccelCurrent = (float) Math.sqrt((double) (x*x + y*y + z*z));
+    			float delta = mAccelCurrent - mAccelLast;
+    			mAccel = mAccel * 0.9f + delta; // perform low-cut filter
+    		}
+
+    		public void onAccuracyChanged(Sensor sensor, int accuracy) {
     		}
     	};
     	
@@ -110,6 +129,7 @@ public class BlobSallad extends WallpaperService {
         public void onDestroy() {
             super.onDestroy();
             this.releaseSound();
+            mSensorManager.unregisterListener(mSensorListener);
             mHandler.removeCallbacks(mDoNextFrame);
         }
         
@@ -118,10 +138,12 @@ public class BlobSallad extends WallpaperService {
         	mVisible = visible;
     		if (visible) {
     			this.initializeSound();
+    			this.register_shake();
     			doNextFrame();
     		}
     		else {
     			this.releaseSound();
+    			mSensorManager.unregisterListener(mSensorListener);
     			mHandler.removeCallbacks(mDoNextFrame);
     		}
         }
@@ -175,7 +197,7 @@ public class BlobSallad extends WallpaperService {
     		if (mWidth > 0 && mHeight > 0)
     		{
     			// load a fixed background image
-	    		bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.sky);
+	    		bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.stars);
 	    		mBgBitmap = scaleBgBitmap(bmp);
 	    		if(mBgBitmap != null){
 					mXOffPix = (int) (mXOff * (mWidth - mBgBitmap.getWidth()));
@@ -243,19 +265,13 @@ public class BlobSallad extends WallpaperService {
 		
 		    blobColl.move(dt);
 		    blobColl.sc(env);
-		    
-		    counter++;
-		    if (counter >= 100)
+
+		    // detect shake event to toggle gravity
+		    if (mAccel > 2)
 		    {
-		    	counter = 0;
-		    	blobColl.setRandomForce();
+		    	toggleGravity();
 		    }
-		    
-		    if (isFirstTime == true)
-		    {
-		    	blobColl.setForce(gravity);
-		    	isFirstTime = false;
-		    }
+		    blobColl.setForce(gravity);
 		}
        
         void draw(Canvas canvas)
@@ -268,6 +284,15 @@ public class BlobSallad extends WallpaperService {
         	this.env = env.setWidth((mWidth - 40.0)/ scaleFactor).setHeight((mHeight - 40.0)/ scaleFactor);
         	env.draw(canvas, scaleFactor);
         	blobColl.draw(canvas, scaleFactor);
+        }
+        
+        public void register_shake()
+        {
+        	mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+			mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+			mAccel = 0.00f;
+			mAccelCurrent = SensorManager.GRAVITY_EARTH;
+			mAccelLast = SensorManager.GRAVITY_EARTH;
         }
         
         public void initializeSound()
@@ -316,8 +341,7 @@ public class BlobSallad extends WallpaperService {
         // onDoubleTap 		- split blob
         // onFling 			- move blob
         // onSingleTap 		- on blob -> join blob
-        //					  on empty area -> move blob to here
-        // toggle gravity ??
+        // onShake			- toggle gravity
         @Override
         public void onTouchEvent(MotionEvent event)
         {
@@ -365,6 +389,7 @@ public class BlobSallad extends WallpaperService {
             selectOffset = null;
 
             // draw here to avoid lag
+            mHandler.removeCallbacks(mDoNextFrame);
             doNextFrame();
       		return true;
     	}
@@ -455,9 +480,6 @@ public class BlobSallad extends WallpaperService {
     		return false;
     	}
 
-    	// on single tap
-    	// 1) if tap on blob, blob will join with another nearest blob
-    	// 2) if tap on empty area, a nearest blob will move to under your finger
     	@Override
     	public boolean onSingleTapConfirmed(MotionEvent event)
     	{
@@ -474,7 +496,7 @@ public class BlobSallad extends WallpaperService {
     		selectOffset = blobColl.selectBlob(x, y);
     		if (selectOffset != null)
     		{
-    			//1) if tap on blob, blob will join with another nearest blob
+    			// join blob with another nearest blob
         		if ( blobColl.selectedBlobJoin() )
         		{
         			// play sound effect, only if join 2 blobs successful
@@ -482,31 +504,15 @@ public class BlobSallad extends WallpaperService {
         		}
         		blobColl.unselectBlob();
                 selectOffset = null;
+                
+                // draw here to avoid lag
+                doNextFrame();
     		}
-    		else
-            {
-    			//2) if tap on empty area, a nearest blob will move to under your finger
-        		selectOffset = blobColl.selectNearestBlob(x, y);
-                if (selectOffset == null)
-                {
-                    return true;
-                }
-
-        		// move blob
-                blobColl.selectedBlobMoveTo(x, y);
-                savedMouseCoords = mouseCoords;
-
-                // unselect blob
-                blobColl.unselectBlob();
-                savedMouseCoords = null;
-                selectOffset = null;
-            }
     		
-    		// draw here to avoid lag
-            doNextFrame();
     		return true;
     	}
 
+    	
 //		@Override
 //		public boolean onKey(View view, int keyCode, KeyEvent event) {
 //			switch(keyCode) {
