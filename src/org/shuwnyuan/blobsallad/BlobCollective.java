@@ -157,7 +157,7 @@ public class BlobCollective {
         }
         
         this.blobs.set(blob1Index, null);
-        this.blobs.get(blob2Index).scale(0.75 * r3 / r2);
+        this.blobs.get(blob2Index).scale(0.8 * r3 / r2);
         this.numActive--;
         
         return true;
