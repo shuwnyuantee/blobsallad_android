@@ -27,7 +27,7 @@ public class BlobSallad extends WallpaperService {
 	
 	private final Handler mHandler = new Handler();
 	// time between frames (msec)
-	private static final int FRAME_INTERVAL = 30;
+	private static final int FRAME_INTERVAL = 20;
 	
 	
 	@Override
@@ -39,7 +39,7 @@ public class BlobSallad extends WallpaperService {
     public void onCreate() {
         super.onCreate();
         /* now let's wait until the debugger attaches */
-//        android.os.Debug.waitForDebugger();
+        android.os.Debug.waitForDebugger();
     }
  
     @Override
@@ -67,8 +67,8 @@ public class BlobSallad extends WallpaperService {
 		
 	    private Environment env = new Environment(0.2, 0.2, 2.6, 1.6);
 	    private final double scaleFactor = 150.0;
-	    private BlobCollective blobColl = new BlobCollective(1.0, 1.0, 30);
-	    private Vector gravity = new Vector(0.0, 10.0);
+	    private BlobCollective blobColl;
+	    private Vector gravity = new Vector(0.0, 20.0);
 	    private Point savedMouseCoords = null;
 	    private Point selectOffset = null;
 	    private GestureDetector gestureDetector;
@@ -77,6 +77,8 @@ public class BlobSallad extends WallpaperService {
 	    private float mAccel; 			// acceleration apart from gravity
 	    private float mAccelCurrent; 	// current acceleration including gravity
 	    private float mAccelLast; 		// last acceleration including gravity
+	    
+	    private Coordinate coordinate = new Coordinate(scaleFactor);
 	    
 
     	private final Runnable mDoNextFrame = new Runnable() {
@@ -156,6 +158,15 @@ public class BlobSallad extends WallpaperService {
     		
     		mCanvas = createCanvasBuffer(format, width, height);
     		loadBgBitmap();
+    		
+    		// HTC Desire HD screen resolution: 480 x 800 (w x h)
+    		boolean highRes = false;
+    		if (mWidth >= 450 && mHeight >= 750)
+    		{
+    			highRes = true;
+    		}
+    		blobColl = new BlobCollective(1.0, 1.0, 30, highRes);
+
     		return;
         }
  
@@ -231,9 +242,6 @@ public class BlobSallad extends WallpaperService {
 				loadBgBitmap();
 			}
 			
-			// update blobs
-			this.updateBlobColl();
-
         	Canvas c = null;
             try {
                 c = holder.lockCanvas();
@@ -245,7 +253,10 @@ public class BlobSallad extends WallpaperService {
             } finally {
                 if (c != null) holder.unlockCanvasAndPost(c);
             }
-        	
+
+            // update blobs
+			this.updateBlobColl();
+            
         	// schedule the next frame
     		mHandler.removeCallbacks(mDoNextFrame);
     		if (mVisible) {
@@ -256,7 +267,7 @@ public class BlobSallad extends WallpaperService {
         
         public void updateBlobColl()
 		{
-		    double dt = 0.05;
+		    double dt = 0.1; //0.05;
 		    
 		    if (savedMouseCoords != null && selectOffset != null)
 		    {
@@ -329,13 +340,8 @@ public class BlobSallad extends WallpaperService {
             }
             else
             {
-                gravity.setY(10.0);
+                gravity.setY(20.0);
             }
-        }
-        
-        public Point getMouseCoords(MotionEvent event)
-        {
-        	return new Point(event.getX()/scaleFactor, event.getY()/scaleFactor);
         }
         
         // onDoubleTap 		- split blob
@@ -361,37 +367,7 @@ public class BlobSallad extends WallpaperService {
     	@Override
     	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
     	{
-    		// select blob
-    		Point mouseCoords;
-            mouseCoords = getMouseCoords(e1);
-            if (mouseCoords == null)
-            {
-                return true;
-            }
-            selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
-            if (selectOffset == null)
-            {
-                return true;
-            }
-    			
-    		// move blob
-            mouseCoords = getMouseCoords(e2);
-            if (mouseCoords == null)
-            {
-                return true;
-            }
-            blobColl.selectedBlobMoveTo(mouseCoords.getX() - selectOffset.getX(), mouseCoords.getY() - selectOffset.getY());
-            savedMouseCoords = mouseCoords;
-
-            // unselect blob
-            blobColl.unselectBlob();
-            savedMouseCoords = null;
-            selectOffset = null;
-
-            // draw here to avoid lag
-            mHandler.removeCallbacks(mDoNextFrame);
-            doNextFrame();
-      		return true;
+    		return true;
     	}
 
     	@Override
@@ -403,26 +379,25 @@ public class BlobSallad extends WallpaperService {
     	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
     	{
     		// select blob
-    		Point mouseCoords;
-            mouseCoords = getMouseCoords(e1);
-            if (mouseCoords == null)
+    		Point point = coordinate.getCoords(e1);
+            if (point == null)
             {
                 return true;
             }
-            selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
+            selectOffset = blobColl.selectBlob(point.getX(), point.getY());
             if (selectOffset == null)
             {
                 return true;
             }
-    			
+            
     		// move blob
-            mouseCoords = getMouseCoords(e2);
-            if (mouseCoords == null)
+            point = coordinate.getCoords(e2);
+            if (point == null)
             {
                 return true;
             }
-            blobColl.selectedBlobMoveTo(mouseCoords.getX() - selectOffset.getX(), mouseCoords.getY() - selectOffset.getY());
-            savedMouseCoords = mouseCoords;
+            blobColl.selectedBlobMoveTo(point.getX() - selectOffset.getX(), point.getY() - selectOffset.getY());
+            savedMouseCoords = point;
 
             // unselect blob
             blobColl.unselectBlob();
@@ -449,14 +424,14 @@ public class BlobSallad extends WallpaperService {
     	@Override
     	public boolean onDoubleTap(MotionEvent event)
     	{
-    		Point mouseCoords;
-    		mouseCoords = getMouseCoords(event);
-    		if(mouseCoords == null)
+    		Point point;
+    		point = coordinate.getCoords(event);
+    		if(point == null)
     		{
     		    return true;
     		}
 
-    		selectOffset = blobColl.selectBlob(mouseCoords.getX(), mouseCoords.getY());
+    		selectOffset = blobColl.selectBlob(point.getX(), point.getY());
     		if (selectOffset == null)
             {
                 return true;
@@ -468,9 +443,16 @@ public class BlobSallad extends WallpaperService {
             
             // draw here to avoid lag
             doNextFrame();
-            // play sound effect
-            mSplitSound.start();
             
+            // play sound effect
+            if (mSplitSound == null)
+            {
+            	this.initializeSound();
+            }
+            else
+            {
+            	mSplitSound.start();
+            }
     		return true;
     	}
 
@@ -483,32 +465,45 @@ public class BlobSallad extends WallpaperService {
     	@Override
     	public boolean onSingleTapConfirmed(MotionEvent event)
     	{
-    		Point mouseCoords;
-    		mouseCoords = getMouseCoords(event);
-    		if(mouseCoords == null)
+    		Point point;
+    		point = coordinate.getCoords(event);
+    		if(point == null)
     		{
     		    return true;
     		}
     		
-    		double x = mouseCoords.getX();
-    		double y = mouseCoords.getY();
+    		double x = point.getX();
+    		double y = point.getY();
 
     		selectOffset = blobColl.selectBlob(x, y);
-    		if (selectOffset != null)
+    		if (selectOffset == null)
+            {
+                return true;
+            }
+    		
+			// join blob with another nearest blob
+    		if ( blobColl.selectedBlobJoin() == false )
     		{
-    			// join blob with another nearest blob
-        		if ( blobColl.selectedBlobJoin() )
-        		{
-        			// play sound effect, only if join 2 blobs successful
-                    mJoinSound.start();
-        		}
-        		blobColl.unselectBlob();
+    			blobColl.unselectBlob();
                 selectOffset = null;
-                
-                // draw here to avoid lag
-                doNextFrame();
+                return true;
     		}
     		
+    		// play sound effect, only if join 2 blobs successful
+    		if (mJoinSound == null)
+            {
+            	this.initializeSound();
+            }
+    		else
+    		{
+    			mJoinSound.start();
+    		}
+    		
+    		blobColl.unselectBlob();
+            selectOffset = null;
+            
+            // draw here to avoid lag
+            doNextFrame();
     		return true;
     	}
 

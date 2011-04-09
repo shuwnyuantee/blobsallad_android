@@ -14,14 +14,23 @@ public class BlobCollective {
     private List<Blob> blobs = new ArrayList<Blob>();
     private Vector tmpForce;
     private Blob selectedBlob;
-    private final double mScaleFactor = 0.90;
+    private final double mScaleFactor = 0.80;
 
-    public BlobCollective(double x, double y, int maxNum) {
+    public BlobCollective(double x, double y, int maxNum, boolean highRes) {
         this.maxNum = maxNum;
         this.numActive = 1;
         this.tmpForce = new Vector(0.0, 0.0);
         this.selectedBlob = null;
-        blobs.add(0, new Blob(x, y, 0.4, 8));
+        
+        // 0.4 - low res
+        // 0.5 - high res
+        double radius = 0.4;
+        if (highRes == true)
+        {
+        	radius = 0.55;
+        }
+        
+        blobs.add(0, new Blob(x, y, radius, 8));
     }
 
     public void split()
@@ -151,13 +160,15 @@ public class BlobCollective {
         r3 = Math.sqrt(r1 * r1 + r2 * r2);
 
         double bigger_r = r2;
+        double mFactor = 1;
         if (r2 < r1)
         {
         	bigger_r = r1;
+        	mFactor = r1 / r2;
         }
         
         this.blobs.set(blob1Index, null);
-        this.blobs.get(blob2Index).scale(0.8 * r3 / r2);
+        this.blobs.get(blob2Index).scale(0.945 * r3 / bigger_r);
         this.numActive--;
         
         return true;
@@ -379,34 +390,6 @@ public class BlobCollective {
         }
     }
     
-    public void setRandomForce()
-    {
-        int i;
-        for (i = 0; i < this.blobs.size(); i++)
-        {
-            if (this.blobs.get(i) == null)
-            {
-                continue;
-            }
-            if (this.blobs.get(i) == this.selectedBlob)
-            {
-                this.blobs.get(i).setForce(new Vector(0.0, 0.0));
-                continue;
-            }
-            
-            // generate random force for each blob
-            Random random = new Random();
-	    	int maxvalue = 10;
-	    	int x = random.nextInt(maxvalue);
-	    	int y = random.nextInt(maxvalue);
-	    	
-	    	Vector force = new Vector(0, 0);
-	    	force.setX(x);
-	    	force.setY(y);
-            this.blobs.get(i).setForce(force);
-        }
-    }
-
     public void addForce(Vector force)
     {
         int i;
