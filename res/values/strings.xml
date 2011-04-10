@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="intro">I am BlobSallad!</string>
     <string name="app_name">BlobSallad</string>
-    <string name="start">Start</string>
-    <string name="quit">Quit</string>
-    <string name="new_game">New Game</string>
+    <string name="description">Double-tap/Tap on blob to split/join it. Shake phone to toggle gravity</string>    
 </resources>
