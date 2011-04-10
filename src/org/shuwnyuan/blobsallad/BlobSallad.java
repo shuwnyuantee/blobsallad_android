@@ -39,7 +39,7 @@ public class BlobSallad extends WallpaperService {
     public void onCreate() {
         super.onCreate();
         /* now let's wait until the debugger attaches */
-        android.os.Debug.waitForDebugger();
+//        android.os.Debug.waitForDebugger();
     }
  
     @Override
@@ -68,7 +68,7 @@ public class BlobSallad extends WallpaperService {
 	    private Environment env = new Environment(0.2, 0.2, 2.6, 1.6);
 	    private final double scaleFactor = 150.0;
 	    private BlobCollective blobColl;
-	    private Vector gravity = new Vector(0.0, 20.0);
+	    private Vector gravity = new Vector(0.0, 10.0);
 	    private Point savedMouseCoords = null;
 	    private Point selectOffset = null;
 	    private GestureDetector gestureDetector;
@@ -77,6 +77,7 @@ public class BlobSallad extends WallpaperService {
 	    private float mAccel; 			// acceleration apart from gravity
 	    private float mAccelCurrent; 	// current acceleration including gravity
 	    private float mAccelLast; 		// last acceleration including gravity
+	    private long mLastUpdate = 0;
 	    
 	    private Coordinate coordinate = new Coordinate(scaleFactor);
 	    
@@ -90,13 +91,22 @@ public class BlobSallad extends WallpaperService {
     	private final SensorEventListener mSensorListener = new SensorEventListener()
     	{
     		public void onSensorChanged(SensorEvent se) {
-    			float x = se.values[0];
-    			float y = se.values[1];
-    			float z = se.values[2];
-    			mAccelLast = mAccelCurrent;
-    			mAccelCurrent = (float) Math.sqrt((double) (x*x + y*y + z*z));
-    			float delta = mAccelCurrent - mAccelLast;
-    			mAccel = mAccel * 0.9f + delta; // perform low-cut filter
+    			long curTime = System.currentTimeMillis();
+    			
+    			// only allow one update every 100ms.
+    	        if ((curTime - mLastUpdate) > 100) {
+    	            mLastUpdate = curTime;
+	    			if ( se.sensor.getType() == Sensor.TYPE_ACCELEROMETER )
+	    			{
+		    			float x = se.values[0];
+		    			float y = se.values[1];
+		    			float z = se.values[2];
+		    			mAccelLast = mAccelCurrent;
+		    			mAccelCurrent = (float) Math.sqrt((double) (x*x + y*y + z*z));
+		    			float delta = mAccelCurrent - mAccelLast;
+		    			mAccel = mAccel * 0.9f + delta; // perform low-cut filter
+	    			}
+    	        }
     		}
 
     		public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -278,9 +288,10 @@ public class BlobSallad extends WallpaperService {
 		    blobColl.sc(env);
 
 		    // detect shake event to toggle gravity
-		    if (mAccel > 2)
+		    if (mAccel > 1.5)
 		    {
 		    	toggleGravity();
+		    	mAccel = 0;
 		    }
 		    blobColl.setForce(gravity);
 		}
@@ -340,7 +351,7 @@ public class BlobSallad extends WallpaperService {
             }
             else
             {
-                gravity.setY(20.0);
+                gravity.setY(10.0);
             }
         }
         
