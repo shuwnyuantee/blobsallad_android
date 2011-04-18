@@ -1,7 +1,5 @@
 package org.shuwnyuan.blobsallad;
 
-import java.util.Random;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,8 +17,8 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.OnGestureListener;
-import android.util.Log;
 import android.service.wallpaper.WallpaperService;
+//import android.util.Log;
 
 
 public class BlobSallad extends WallpaperService {
@@ -123,7 +121,7 @@ public class BlobSallad extends WallpaperService {
     		
     		mContext = context;
     		gestureDetector = new GestureDetector(mContext, this);
-    		Log.v(TAG, "started");
+//    		Log.v(TAG, "started");
     	}
  
         @Override
