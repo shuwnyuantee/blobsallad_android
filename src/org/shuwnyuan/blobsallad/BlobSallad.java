@@ -1,8 +1,8 @@
 package org.shuwnyuan.blobsallad;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.hardware.Sensor;
@@ -18,10 +18,12 @@ import android.view.SurfaceHolder;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.OnGestureListener;
 import android.service.wallpaper.WallpaperService;
-//import android.util.Log;
+import android.util.Log;
 
 
 public class BlobSallad extends WallpaperService {
+	
+	public static final String SHARED_PREFS_NAME = "blobsettings";
 	
 	private final Handler mHandler = new Handler();
 	// time between frames (msec)
@@ -46,7 +48,11 @@ public class BlobSallad extends WallpaperService {
     }
 
     
-    public class BlobSalladEngine extends Engine implements OnGestureListener, OnDoubleTapListener { //OnKeyListener
+    public class BlobSalladEngine extends Engine implements 
+	    		OnGestureListener,
+	    		OnDoubleTapListener, //OnKeyListener
+	    		SharedPreferences.OnSharedPreferenceChangeListener
+    {
     	private static final String TAG = "BlobSalladEngine";
     	private WallpaperService mContext = null;
     	private boolean	mVisible = true;
@@ -61,6 +67,7 @@ public class BlobSallad extends WallpaperService {
 	    private Canvas mCanvas = null;
 		private Bitmap mBitmap = null;
 		private Bitmap mBgBitmap = null;
+		private String mBgImageString = null;
 		private final Paint	mPaint = new Paint();
 		
 	    private Environment env = new Environment(0.2, 0.2, 2.6, 1.6);
@@ -70,6 +77,7 @@ public class BlobSallad extends WallpaperService {
 	    private Point savedMouseCoords = null;
 	    private Point selectOffset = null;
 	    private GestureDetector gestureDetector;
+	    private int mMaxBlobs = 20;
 	    
 	    private SensorManager mSensorManager;
 	    private float mAccel; 			// acceleration apart from gravity
@@ -78,6 +86,7 @@ public class BlobSallad extends WallpaperService {
 	    private long mLastUpdate = 0;
 	    
 	    private Coordinate coordinate = new Coordinate(scaleFactor);
+	    private SharedPreferences mPrefs = null;
 	    
 
     	private final Runnable mDoNextFrame = new Runnable() {
@@ -121,7 +130,12 @@ public class BlobSallad extends WallpaperService {
     		
     		mContext = context;
     		gestureDetector = new GestureDetector(mContext, this);
-//    		Log.v(TAG, "started");
+    		
+    		mPrefs = BlobSallad.this.getSharedPreferences(SHARED_PREFS_NAME, 0);
+    		mPrefs.registerOnSharedPreferenceChangeListener(this);
+    		onSharedPreferenceChanged(mPrefs, null);
+    		
+//    		Log.v(TAG, "Wallpaper engine started");
     	}
  
         @Override
@@ -173,7 +187,7 @@ public class BlobSallad extends WallpaperService {
     		{
     			highRes = true;
     		}
-    		blobColl = new BlobCollective(1.0, 1.0, 30, highRes);
+    		blobColl = new BlobCollective(1.0, 1.0, mMaxBlobs, highRes);
 
     		return;
         }
@@ -213,15 +227,29 @@ public class BlobSallad extends WallpaperService {
         
         private void loadBgBitmap() {
     		Bitmap bmp = null;
+    		
     		if (mWidth > 0 && mHeight > 0)
     		{
-    			// load a fixed background image
-	    		bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.stars);
-	    		mBgBitmap = scaleBgBitmap(bmp);
-	    		if(mBgBitmap != null){
+    			// load user select image
+    			if (mBgImageString != null)
+    			{
+    				bmp = BlobUtil.imageFilePathToBitmap(mContext, mBgImageString, Math.max(mWidth, mHeight));
+    			}
+    			// default background image
+    			else
+    			{
+    				bmp = BlobUtil.imageResourceToBitmap(mContext, mContext.getResources(), R.drawable.stars, Math.max(mWidth, mHeight));
+    			}
+	    		
+	    		if (bmp != null)
+	    		{
+	    			mBgBitmap = scaleBgBitmap(bmp);
+	    		}
+	    		if (mBgBitmap != null) {
 					mXOffPix = (int) (mXOff * (mWidth - mBgBitmap.getWidth()));
 					mYOffPix = (int) (mYOff * (mHeight - mBgBitmap.getHeight()));
 				}
+	    		
 	    		// draw background image to canvas
 	    		mCanvas.drawBitmap(mBgBitmap, mXOffPix, mYOffPix, mPaint);
     		}
@@ -515,6 +543,60 @@ public class BlobSallad extends WallpaperService {
             doNextFrame();
     		return true;
     	}
+
+		@Override
+		public void onSharedPreferenceChanged (SharedPreferences prefs, String key)
+		{
+			if (key != null) {
+				if (key.equals(BlobSettings.USE_BG_IMAGE_KEY) || key.equals(BlobSettings.BG_IMAGE_KEY)) {
+					Boolean bgImageFlag = prefs.getBoolean(BlobSettings.USE_BG_IMAGE_KEY, false);
+					String bgImage = prefs.getString(BlobSettings.BG_IMAGE_KEY, null);
+					
+					if (bgImageFlag == true && bgImage != null) {
+						changeBgImagePref(bgImage, false);
+					}
+					else {
+						changeBgImagePref(null, true);
+					}
+				}
+//				else if (key.equals("maxBlobsPref")) {
+//					changeMaxBlobsPref(prefs.getInt("maxBlobsPref", 20));
+//				}
+			}
+			else {
+				// background image
+				Boolean bgImageFlag = prefs.getBoolean(BlobSettings.USE_BG_IMAGE_KEY, false);
+				String bgImage = prefs.getString(BlobSettings.BG_IMAGE_KEY, null);
+				
+				if (bgImageFlag == true && bgImage != null) {
+					changeBgImagePref(bgImage, false);
+				}
+				else {
+					changeBgImagePref(null, true);
+				}
+				
+				// blob size
+//				changeMaxBlobsPref(prefs.getInt("maxBlobsPref", 20));
+			}
+			return;
+		}
+
+		private void changeBgImagePref(String bgImage, Boolean useDefault) {
+			if (bgImage != null && useDefault == false)
+			{
+				mBgImageString = bgImage;
+			}
+			else
+			{
+				mBgImageString = null;
+			}
+			loadBgBitmap();
+		}
+		
+		private void changeMaxBlobsPref(int max) {
+			mMaxBlobs = max;
+			blobColl.removeExtraBlobs(mMaxBlobs);
+		}
 
     	
 //		@Override

@@ -3,8 +3,6 @@ package org.shuwnyuan.blobsallad;
 //import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
 import android.graphics.Canvas;
 
 
@@ -33,6 +31,14 @@ public class BlobCollective {
         blobs.add(0, new Blob(x, y, radius, 8));
     }
 
+    public void removeExtraBlobs(int max) {
+    	if (blobs.size() > max) {
+    		for (int i = max; i < blobs.size(); i++) {
+    			blobs.remove(i);
+    		}
+    	}
+    }
+    
     public void split()
     {
         int i, maxIndex = 0;

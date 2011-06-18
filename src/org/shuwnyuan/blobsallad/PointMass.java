@@ -82,8 +82,7 @@ public class PointMass {
         this.prev.setX(c);
         this.cur.setX(t);
         
-        Log.i(LOG_TAG, "X prev: " + c + ", cur: " + t);
-        
+//        Log.i(LOG_TAG, "X prev: " + c + ", cur: " + t);
 
         a = this.force.getY() / this.mass;
         c = this.cur.getY();

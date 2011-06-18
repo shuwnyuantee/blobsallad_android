@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BlobSallad Wallpaper</string>
-    <string name="description">Double-tap/Tap on blob to split/join it. Shake phone to toggle gravity</string>    
+    <string name="description">Double-tap/Tap on blob to split/join it. Shake phone to toggle gravity</string>
+    <string name="blobsallad_settings">BlobSallad Wallpaper Settings</string>  
+    <string name="preferences_label">BlobSallad Settings</string>
+    <string name="author">Shuwn Yuan TEE</string>
 </resources>
